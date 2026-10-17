@@ -44,7 +44,7 @@
             <h3>Histori Pergerakan</h3>
             <span class="muted" id="listMeta"></span>
         </div>
-        <div class="table-wrap">
+        <div class="table-wrap reports-table-wrap">
             <table>
                 <thead>
                     <tr><th>Tanggal</th><th>Stand</th><th>Flight</th><th>Maskapai</th><th>Rute</th><th>Tipe</th><th>Reg</th><th>Status</th><th>Delay</th><th>Diinput</th></tr>

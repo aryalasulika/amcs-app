@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Events\StandBoardUpdated;
+use Illuminate\Support\Facades\Event;
 use Tests\AmcsTestCase;
 
 class StandBoardTest extends AmcsTestCase
@@ -43,5 +45,21 @@ class StandBoardTest extends AmcsTestCase
         $response = $this->getJson('/api/v1/stands')->assertOk();
 
         $this->assertSame(1, $response->json('counts.ron'));
+    }
+
+    public function test_operational_changes_broadcast_a_board_update(): void
+    {
+        Event::fake([StandBoardUpdated::class]);
+
+        $this->operator();
+        $movement = $this->createMovement(['flight_number' => 'IW-510']);
+
+        Event::assertDispatched(StandBoardUpdated::class, function (StandBoardUpdated $event) use ($movement) {
+            return $event->movementId === $movement->id && $event->action === 'created';
+        });
+
+        $this->postJson("/api/v1/movements/{$movement->id}/block-off")->assertOk();
+
+        Event::assertDispatched(StandBoardUpdated::class, fn (StandBoardUpdated $event) => $event->action === 'transitioned');
     }
 }

@@ -47,6 +47,15 @@ class MovementPolicy
         return $user->can('movements.override');
     }
 
+    /**
+     * Edit/delete from the AMC dashboard movement history. Restricted to
+     * administrators so historical records cannot be changed by operators.
+     */
+    public function manageHistory(User $user, Movement $movement): bool
+    {
+        return $user->can('movements.history.manage');
+    }
+
     public function delete(User $user, Movement $movement): bool
     {
         return $user->can('movements.delete');

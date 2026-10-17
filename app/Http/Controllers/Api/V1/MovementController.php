@@ -77,6 +77,16 @@ class MovementController extends Controller
             ->response();
     }
 
+    /**
+     * Administrator-only correction from the AMC dashboard history table.
+     */
+    public function adminUpdate(UpdateMovementRequest $request, Movement $movement): JsonResponse
+    {
+        $this->authorize('manageHistory', $movement);
+
+        return $this->update($request, $movement);
+    }
+
     public function transition(TransitionMovementRequest $request, Movement $movement): JsonResponse
     {
         $this->authorize('transition', $movement);
@@ -130,6 +140,16 @@ class MovementController extends Controller
         $this->service->archive($movement, $request->user(), $data['reason']);
 
         return response()->json(['message' => 'Pergerakan diarsipkan (audit trail tetap tersimpan).']);
+    }
+
+    /**
+     * Administrator-only archive action from the AMC dashboard history table.
+     */
+    public function adminDestroy(Request $request, Movement $movement): JsonResponse
+    {
+        $this->authorize('manageHistory', $movement);
+
+        return $this->destroy($request, $movement);
     }
 
     public function logs(Movement $movement): AnonymousResourceCollection

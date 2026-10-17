@@ -244,20 +244,46 @@ tbody tr:hover { background: rgba(255, 255, 255, 0.02); }
 
 /* ---------- ATC monitor ---------- */
 body.atc { background: #02040a; }
-.atc-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--panel-border); padding-bottom: 14px; margin-bottom: 18px; }
-.atc-head h1 { font-size: 22px; font-weight: 900; letter-spacing: 0.6px; }
+.atc-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; border-bottom: 3px solid var(--panel-border); padding-bottom: 14px; margin-bottom: 18px; flex-wrap: wrap; }
+.atc-head-main { min-width: 0; }
+.atc-head h1 { font-size: 22px; font-weight: 900; letter-spacing: 0.6px; line-height: 1.3; }
 .atc-tag { background: #0284c7; padding: 4px 12px; border-radius: 5px; font-size: 11px; font-weight: 800; margin-left: 10px; }
+.atc-sync-line { font-size: 12px; margin-top: 6px; }
+.atc-clock { font-variant-numeric: tabular-nums; font-weight: 800; color: var(--text-main); }
+.atc-tools { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.atc-back { display: none; font-size: 11px; font-weight: 700; color: var(--accent-color); margin-bottom: 6px; }
+.atc-summary { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.atc-summary-item { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--panel-border); background: #0b1220; font-size: 11px; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.3px; }
+.atc-summary-item b { font-size: 13px; color: #fff; }
+.atc-summary-item.is-active { color: var(--vacant-color); border-color: rgba(16, 185, 129, 0.3); }
+.atc-summary-item.is-delay { color: #f87171; border-color: rgba(239, 68, 68, 0.3); }
+.atc-summary-item.is-ron { color: #60a5fa; border-color: rgba(59, 130, 246, 0.3); }
+.atc-summary-item.is-vacant { color: var(--accent-color); }
 .atc-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
-.atc-card { background: #0b1220; border: 2px solid var(--panel-border); border-radius: 14px; padding: 16px; text-align: center; min-height: 380px; display: flex; flex-direction: column; justify-content: space-between; }
+.atc-card { background: #0b1220; border: 2px solid var(--panel-border); border-radius: 14px; padding: 16px; text-align: center; min-height: 380px; display: flex; flex-direction: column; justify-content: space-between; gap: 8px; }
+.atc-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; width: 100%; }
+.atc-stand { min-width: 0; }
 .atc-card .title { font-size: 14px; font-weight: 800; color: #94a3b8; }
+.atc-card .stand-limit { font-size: 9px; color: #fca5a5; font-weight: 700; background: rgba(239, 68, 68, 0.12); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.25); margin-top: 4px; display: inline-block; }
+.atc-card-body { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; }
 .atc-card .flight { font-size: 24px; font-weight: 900; color: var(--amc-gold); margin: 12px 0; letter-spacing: 0.5px; }
+.atc-card.is-vacant .atc-card-body { margin: auto 0; gap: 8px; }
+.atc-card.is-vacant .flight { font-size: 26px; }
+.atc-card.state-vacant { border-color: rgba(16, 185, 129, 0.35); }
+.atc-card.state-entering { border-color: rgba(245, 158, 11, 0.45); }
+.atc-card.state-on { border-color: rgba(244, 63, 94, 0.45); }
+.atc-card.state-ron { border-color: rgba(59, 130, 246, 0.45); }
+.atc-card.state-delay { border-color: rgba(239, 68, 68, 0.55); }
 .atc-card .ac { background: #131c30; border: 1px solid #334155; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; color: #38bdf8; display: inline-block; }
+.atc-card .meta { font-size: 12px; color: var(--text-sub); }
+.atc-card .route { font-size: 11px; font-weight: 700; color: #93c5fd; background: rgba(59, 130, 246, 0.14); border: 1px solid rgba(59, 130, 246, 0.2); padding: 3px 10px; border-radius: 5px; }
 .atc-card .info { background: rgba(0, 0, 0, 0.35); border-radius: 9px; padding: 10px; text-align: left; font-size: 12px; }
 .atc-card .row { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
 .atc-card .row .l { color: var(--text-dim); font-weight: 600; }
 .atc-card .row .v { font-weight: 700; }
 .atc-card .routing { background: #1e1b4b; border: 1px solid #312e81; padding: 8px; border-radius: 6px; font-size: 11px; font-weight: 700; color: #c084fc; text-transform: uppercase; }
 .atc-card .status { font-size: 13px; font-weight: 800; padding: 9px; border-radius: 8px; text-transform: uppercase; display: block; }
+.atc-card-head .status { flex: 0 0 auto; display: inline-block; font-size: 11px; padding: 5px 12px; border-radius: 999px; }
 .atc-vacant { background: rgba(16, 185, 129, 0.1); color: var(--vacant-color); border: 2px solid var(--vacant-color); }
 .atc-occ { background: rgba(244, 63, 94, 0.1); color: var(--occupied-color); border: 2px solid var(--occupied-color); }
 .atc-app { background: rgba(245, 158, 11, 0.1); color: var(--amc-gold); border: 2px solid var(--amc-gold); }
@@ -273,14 +299,219 @@ body.atc { background: #02040a; }
 .hidden { display: none !important; }
 .mono { font-variant-numeric: tabular-nums; }
 
+/* ---------- Responsive foundations ---------- */
+body { overflow-x: hidden; }
+img, svg { max-width: 100%; height: auto; }
+.field { min-width: 0; }
+input, select, textarea { min-width: 0; }
+.table-wrap { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+.table-wrap table { min-width: 680px; }
+.history-table-wrap table { min-width: 1040px; }
+.reports-table-wrap table { min-width: 900px; }
+.modal { max-height: calc(100vh - 32px); overflow-y: auto; }
+
 @media (max-width: 1200px) {
     .grid-2 { grid-template-columns: 1fr; }
     .apron-grid, .atc-grid { grid-template-columns: repeat(3, 1fr); }
     .stats-bar { grid-template-columns: repeat(2, 1fr); }
 }
-@media (max-width: 720px) {
+
+/* Tablet / small laptop */
+@media (max-width: 900px) {
+    .topbar {
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 12px 16px;
+    }
+    .brand { flex: 1 1 auto; min-width: 0; }
+    .brand .sub {
+        max-width: 220px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .nav {
+        order: 3;
+        width: 100%;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: 4px;
+        padding-bottom: 3px;
+        scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch;
+    }
+    .nav a { flex: 0 0 auto; }
+    .topbar-right { gap: 8px; }
+    .userbox .who { display: none; }
     .apron-grid, .atc-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Mobile */
+@media (max-width: 720px) {
+    .topbar { position: static; }
+    .page { padding: 16px 14px 48px; }
+    .page-head { align-items: flex-start; gap: 12px; }
+    .page-head .btn-row { width: 100%; }
+    .page-head .btn-row .btn { flex: 1 1 140px; }
+    .panel { padding: 15px; }
+    .apron { padding: 14px; }
+    .apron-grid, .atc-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    .apron-grid { padding: 12px; }
+    .stats-bar { grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .form-grid, .timing { grid-template-columns: 1fr; }
     .full { grid-column: span 1; }
-    .topbar { flex-wrap: wrap; }
+    .btn { min-height: 42px; }
+    .btn-sm { min-height: 36px; }
+    .table-wrap { max-height: none; }
+    .table-wrap table { min-width: 760px; }
+    .history-table-wrap table { min-width: 1040px; }
+    .reports-table-wrap table { min-width: 900px; }
+    input, select, textarea { font-size: 16px; } /* hindari auto-zoom iOS */
+    .modal-backdrop { padding: 12px; }
+    .modal {
+        padding: 18px;
+        max-height: calc(100vh - 24px);
+        max-height: calc(100dvh - 24px);
+    }
+    .modal .actions { flex-wrap: wrap; }
+    .modal .actions .btn { flex: 1 1 100%; }
+    #toasts { left: 12px; right: 12px; bottom: 12px; max-width: none; }
+    .toast { width: 100%; }
+}
+
+/* Small phone */
+@media (max-width: 560px) {
+    .topbar { padding: 10px 12px; }
+    .brand { gap: 10px; }
+    .brand .logo { width: 38px; height: 38px; }
+    .brand h1 { font-size: 13px; line-height: 1.2; }
+    .brand .sub { font-size: 9px; max-width: 190px; }
+    .clock { display: none; }
+    .connection { padding: 6px 9px; font-size: 10px; }
+    .avatar { width: 30px; height: 30px; font-size: 12px; }
+    .userbox form .btn { padding: 6px 9px; font-size: 10px; }
+    .page { padding: 14px 10px 40px; }
+    .page-head h2 { font-size: 17px; }
+    .stats-bar { grid-template-columns: 1fr; }
+    .stat-card { padding: 12px 14px; }
+    .stat-number { font-size: 22px; }
+    .apron-grid, .atc-grid { grid-template-columns: 1fr; }
+    .atc-head {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .atc-head h1 { font-size: 16px; line-height: 1.35; }
+    .atc-card, .stand-card { min-height: auto; }
+    .stand-card .plane { font-size: 28px; }
+    .runway-strip { height: 48px; padding: 0 14px; }
+    .rwy-designator { font-size: 16px; }
+    .taxiway-container { height: 42px; padding: 0 2%; }
+    .taxi-link { width: 44%; }
+    .apron-title { font-size: 10px; letter-spacing: 1px; }
+    .panel-head { gap: 8px; }
+    .btn-row { gap: 8px; }
+    .login-wrap { padding: 16px 12px; }
+    .login-card { padding: 24px 18px; }
+    .box-dashed { padding: 10px; }
+}
+
+/* ------------------------------------------------------------------ */
+/* ATC monitor - mobile optimised                                      */
+/* ------------------------------------------------------------------ */
+@media (max-width: 720px) {
+    /* Compact topbar: keep connection, avatar, and logout visible. */
+    body.atc .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        padding: 8px 12px;
+        gap: 8px;
+    }
+    body.atc .topbar .nav { display: none; }
+    body.atc .topbar .brand .sub,
+    body.atc .topbar .brand h1 { display: none; }
+    body.atc .topbar .brand .logo { width: 34px; height: 34px; }
+    body.atc .topbar .clock { display: none; }
+    body.atc .topbar .connection { font-size: 10px; padding: 6px 9px; }
+    body.atc .topbar .avatar { width: 30px; height: 30px; font-size: 12px; }
+    body.atc .topbar .userbox form .btn { padding: 6px 9px; font-size: 10px; }
+
+    body.atc .page { padding-top: 10px; }
+    body.atc .atc-head {
+        align-items: stretch;
+        gap: 10px;
+        padding-bottom: 10px;
+        margin-bottom: 12px;
+    }
+    body.atc .atc-back { display: inline-flex; }
+    body.atc .atc-head h1 { font-size: 15px; line-height: 1.35; }
+    body.atc .atc-tag {
+        display: inline-block;
+        margin: 5px 0 0;
+        font-size: 9px;
+        padding: 3px 8px;
+    }
+    body.atc .atc-sync-line { font-size: 11px; margin-top: 5px; }
+    body.atc .atc-tools { width: 100%; justify-content: stretch; }
+    body.atc .atc-tools .btn { flex: 1 1 0; min-height: 40px; }
+    body.atc .atc-summary {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+    body.atc .atc-summary-item {
+        justify-content: space-between;
+        border-radius: 9px;
+        padding: 8px 10px;
+    }
+    body.atc .atc-summary-item b { font-size: 15px; }
+
+    body.atc .atc-grid { grid-template-columns: 1fr; gap: 12px; }
+    body.atc .atc-card {
+        min-height: auto;
+        padding: 14px;
+        gap: 10px;
+        text-align: left;
+    }
+    body.atc .atc-card-head {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        text-align: center;
+    }
+    body.atc .atc-card-head .status {
+        width: 100%;
+        margin: 0;
+        padding: 10px 12px;
+        font-size: 14px;
+        border-radius: 9px;
+        text-align: center;
+    }
+    body.atc .atc-card .title { font-size: 15px; }
+    body.atc .atc-card-body { gap: 4px; }
+    body.atc .atc-card .flight { font-size: 30px; margin: 2px 0; }
+    body.atc .atc-card .ac { font-size: 13px; }
+    body.atc .atc-card .meta { font-size: 12px; }
+    body.atc .atc-card .route { font-size: 11px; }
+    body.atc .atc-card .info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0 14px;
+        padding: 10px 12px;
+    }
+    body.atc .atc-card .info .row { padding: 6px 0; }
+    body.atc .atc-card .info .row.is-delay { grid-column: 1 / -1; }
+    body.atc .atc-card .routing { font-size: 11px; padding: 8px; }
+}
+
+@media (max-width: 380px) {
+    body.atc .atc-head h1 { font-size: 14px; }
+    body.atc .atc-card .flight { font-size: 26px; }
+    body.atc .atc-card .info { grid-template-columns: 1fr; }
+    body.atc .atc-card .info .row.is-delay { grid-column: auto; }
 }

@@ -178,16 +178,19 @@
                     <span class="muted" id="historyMeta"></span>
                 </div>
             </div>
-            <div class="table-wrap">
+            <div class="table-wrap history-table-wrap">
                 <table>
                     <thead>
                         <tr>
                             <th>Waktu</th><th>Stand</th><th>Flight</th><th>Rute</th><th>Jenis</th>
                             <th>Tipe</th><th>Reg</th><th>Status</th><th>ETA</th><th>ATA</th><th>ETD</th><th>ATD</th>
+                            @can('movements.history.manage')
+                                <th>Aksi</th>
+                            @endcan
                         </tr>
                     </thead>
                     <tbody id="historyBody">
-                        <tr><td colspan="12" class="empty">Memuat riwayat...</td></tr>
+                        <tr><td colspan="{{ auth()->user()->can('movements.history.manage') ? 13 : 12 }}" class="empty">Memuat riwayat...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -306,14 +309,23 @@
         canReset: @json(auth()->user()->can('stands.reset')),
         canExport: @json(auth()->user()->can('reports.export')),
         canOverride: @json(auth()->user()->can('movements.override')),
+        canManageHistory: @json(auth()->user()->can('movements.history.manage')),
+        editSource: null,
         auto: { airline: false, aircraft: false },
         pendingOverride: null,
         bestRecommendation: null,
     };
 
     const pollMs = (parseInt(document.querySelector('meta[name="amcs-poll"]').content, 10) || 3) * 1000;
+    const fallbackPollMs = (parseInt(document.querySelector('meta[name="amcs-poll-fallback"]').content, 10) || 15) * 1000;
     const $ = (id) => document.getElementById(id);
     const conn = AMCS.initConnection();
+    let boardPollTimer = null;
+    let realtimeConnected = false;
+
+    function markOnline() {
+        conn.online(realtimeConnected ? 'Realtime' : 'Polling');
+    }
 
     /* ---------------- Options / form setup ---------------- */
     async function loadOptions() {
@@ -776,9 +788,21 @@
 
         try {
             if (state.editingId) {
-                await AMCS.api('/movements/' + state.editingId, { method: 'PUT', body: payload });
-                AMCS.toast('Tersimpan', 'Koreksi data pergerakan berhasil disimpan.', 'success');
+                const historyDate = $('historyDate').value;
+                const editEndpoint = state.editSource === 'history'
+                    ? '/movements/' + state.editingId + '/history'
+                    : '/movements/' + state.editingId;
+
+                await AMCS.api(editEndpoint, { method: 'PUT', body: payload });
+                AMCS.toast(
+                    'Tersimpan',
+                    state.editSource === 'history'
+                        ? 'Koreksi histori pergerakan berhasil disimpan.'
+                        : 'Koreksi data pergerakan berhasil disimpan.',
+                    'success',
+                );
                 resetForm();
+                $('historyDate').value = historyDate || AMCS.todayISO();
             } else {
                 payload.state = $('initialState').value;
                 const res = await AMCS.api('/movements', { method: 'POST', body: payload });
@@ -799,7 +823,13 @@
                             override_reason: reason,
                         });
 
-                        const res = await AMCS.api(state.editingId ? '/movements/' + state.editingId : '/movements', {
+                        const editEndpoint = state.editingId
+                            ? (state.editSource === 'history'
+                                ? '/movements/' + state.editingId + '/history'
+                                : '/movements/' + state.editingId)
+                            : '/movements';
+
+                        const res = await AMCS.api(editEndpoint, {
                             method: state.editingId ? 'PUT' : 'POST',
                             body: overridePayload,
                         });
@@ -838,6 +868,7 @@
     function resetForm() {
         $('editingId').value = '';
         state.editingId = null;
+        state.editSource = null;
         $('movementForm').reset();
         const today = AMCS.todayISO();
         $('reportDate').value = today;
@@ -853,11 +884,12 @@
         updateCapacityHint();
     }
 
-    async function loadIntoForm(movementId) {
+    async function loadIntoForm(movementId, source = 'card') {
         try {
             const res = await AMCS.api('/movements/' + movementId);
             const m = res.data;
             state.editingId = m.id;
+            state.editSource = source;
             $('editingId').value = m.id;
             $('flightNumber').value = m.flight_number || '';
             $('registration').value = m.registration || '';
@@ -888,14 +920,20 @@
 
             $('stateWrap').style.display = 'none';
             $('btnCancelEdit').style.display = '';
-            $('formMode').innerText = 'Mode: koreksi data';
-            $('formTitle').innerText = 'Koreksi Data — ' + m.flight_number;
+            $('formMode').innerText = source === 'history'
+                ? 'Mode: koreksi histori (Administrator)'
+                : 'Mode: koreksi data';
+            $('formTitle').innerText = (source === 'history' ? 'Koreksi Histori — ' : 'Koreksi Data — ') + m.flight_number;
             updateCapacityHint();
             window.scrollTo({ top: document.getElementById('movementForm').offsetTop - 120, behavior: 'smooth' });
         } catch (error) { AMCS.errorToast(error, 'Gagal memuat data'); }
     }
 
-    $('btnCancelEdit').addEventListener('click', resetForm);
+    $('btnCancelEdit').addEventListener('click', () => {
+        const selectedHistoryDate = $('historyDate').value;
+        resetForm();
+        $('historyDate').value = selectedHistoryDate || AMCS.todayISO();
+    });
 
     /* ---------------- Recommendation ---------------- */
     $('btnRecommend').addEventListener('click', async () => {
@@ -946,6 +984,7 @@
     /* ---------------- History & stats ---------------- */
     async function loadDaily() {
         const date = $('historyDate').value || AMCS.todayISO();
+        const historyColspan = state.canManageHistory ? 13 : 12;
         try {
             const res = await AMCS.api('/reports/daily', { query: { date } });
             $('stat-mov').innerText = res.totals.movements;
@@ -953,7 +992,7 @@
             $('historyMeta').innerText = res.totals.movements + ' pergerakan';
 
             if (!res.movements.length) {
-                $('historyBody').innerHTML = '<tr><td colspan="12" class="empty">Belum ada pergerakan pada tanggal ini.</td></tr>';
+                $('historyBody').innerHTML = `<tr><td colspan="${historyColspan}" class="empty">Belum ada pergerakan pada tanggal ini.</td></tr>`;
                 return;
             }
 
@@ -961,6 +1000,13 @@
                 const waktu = m.updated_at ? new Date(m.updated_at) : null;
                 const timeStr = waktu ? waktu.toLocaleString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
                 const stand = m.parking_stand ? m.parking_stand.name : '-';
+                const actions = state.canManageHistory
+                    ? `<td class="text-right" style="white-space:nowrap;">
+                            <button class="btn btn-sm" data-history-edit="${m.id}" title="Koreksi histori">✏️</button>
+                            <button class="btn btn-sm btn-red" data-history-delete="${m.id}" data-flight="${AMCS.escapeHtml(m.flight_number || '-')}" title="Hapus/arsipkan histori">🗑️</button>
+                        </td>`
+                    : '';
+
                 return `<tr>
                     <td class="mono" style="white-space:nowrap;">${AMCS.escapeHtml(timeStr)}</td>
                     <td><b>${AMCS.escapeHtml(stand)}</b></td>
@@ -974,9 +1020,45 @@
                     <td>${AMCS.escapeHtml(m.ata || '-')}</td>
                     <td>${AMCS.escapeHtml(m.etd || '-')}</td>
                     <td>${AMCS.escapeHtml(m.atd || '-')}</td>
+                    ${actions}
                 </tr>`;
             }).join('');
         } catch (error) { AMCS.errorToast(error, 'Gagal memuat laporan harian'); }
+    }
+
+    $('historyBody').addEventListener('click', (event) => {
+        const edit = event.target.closest('[data-history-edit]');
+        if (edit) {
+            loadIntoForm(edit.dataset.historyEdit, 'history');
+            return;
+        }
+
+        const remove = event.target.closest('[data-history-delete]');
+        if (remove) {
+            deleteHistoryMovement(remove.dataset.historyDelete, remove.dataset.flight);
+        }
+    });
+
+    function deleteHistoryMovement(id, flightNumber) {
+        openActionModal({
+            title: 'Hapus Riwayat Pergerakan',
+            message: `Movement ${flightNumber || ''} akan diarsipkan (soft delete). Histori dan audit trail tetap tersimpan. Lanjutkan?`,
+            confirmLabel: 'Hapus',
+            confirmClass: 'btn-red',
+            showReason: true,
+            requireReason: true,
+            reasonLabel: 'Alasan penghapusan (wajib)',
+            errorTitle: 'Gagal menghapus riwayat',
+            onConfirm: async ({ reason }) => {
+                const res = await AMCS.api('/movements/' + id + '/history', {
+                    method: 'DELETE',
+                    body: { reason },
+                });
+
+                AMCS.toast('Terhapus', res.message || 'Riwayat pergerakan diarsipkan.', 'success');
+                refresh();
+            },
+        });
     }
 
     $('historyDate').addEventListener('change', loadDaily);
@@ -1032,7 +1114,7 @@
         try { await AMCS.api('/notifications/read-all', { method: 'POST', body: {} }); loadNotifications(); } catch (e) {}
     });
 
-    /* ---------------- Polling ---------------- */
+    /* ---------------- Realtime + polling fallback ---------------- */
     async function refresh() {
         try {
             const [board] = await Promise.all([
@@ -1041,11 +1123,44 @@
             ]);
             state.board = board;
             renderBoard();
-            conn.online();
+            markOnline();
         } catch (error) {
-            conn.offline();
+            conn.offline('API terputus');
             AMCS.errorToast(error, 'Sinkronisasi gagal');
         }
+    }
+
+    async function pollBoard() {
+        try {
+            const board = await AMCS.api('/stands');
+            state.board = board;
+            renderBoard();
+            markOnline();
+        } catch (error) {
+            conn.offline('API terputus');
+        }
+    }
+
+    function setBoardPollInterval(ms) {
+        clearInterval(boardPollTimer);
+        boardPollTimer = setInterval(pollBoard, ms);
+    }
+
+    function startRealtime() {
+        const started = window.AMCSRealtime && AMCSRealtime.connect(
+            () => refresh(),
+            (online) => {
+                realtimeConnected = online;
+                if (online) {
+                    conn.online('Realtime');
+                } else {
+                    conn.online('Polling');
+                }
+                setBoardPollInterval(online ? fallbackPollMs : pollMs);
+            },
+        );
+
+        setBoardPollInterval(started ? fallbackPollMs : pollMs);
     }
 
     async function init() {
@@ -1055,7 +1170,7 @@
         } catch (error) { AMCS.errorToast(error, 'Gagal memuat master data'); }
         await refresh();
         loadNotifications();
-        setInterval(() => { AMCS.api('/stands').then(b => { state.board = b; renderBoard(); conn.online(); }).catch(() => conn.offline()); }, pollMs);
+        startRealtime();
         setInterval(loadNotifications, 20000);
     }
 

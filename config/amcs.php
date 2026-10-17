@@ -36,11 +36,24 @@ return [
     ],
 
     /*
-    | Realtime transport. The ATC monitor and dashboard poll a lightweight
-    | status endpoint at this interval (seconds). Target: <= 3 seconds.
+    | Realtime transport. The ATC monitor and dashboard subscribe to a private
+    | Reverb channel. A controlled poll remains as a fallback at
+    | `poll_seconds` when the socket is unavailable and at
+    | `fallback_poll_seconds` while it is connected (safety net for missed
+    | events). Target: <= 3 seconds.
     */
     'realtime' => [
+        'broadcast' => filter_var(env('AMCS_REALTIME_BROADCAST', true), FILTER_VALIDATE_BOOLEAN),
+        'channel' => env('AMCS_REALTIME_CHANNEL', 'amcs.stands'),
         'poll_seconds' => (int) env('AMCS_REALTIME_POLL_SECONDS', 3),
+        'fallback_poll_seconds' => (int) env('AMCS_REALTIME_FALLBACK_POLL_SECONDS', 15),
+
+        // Public endpoint used by the browser. Kept separate from REVERB_HOST
+        // so the server can broadcast over loopback (127.0.0.1:8080) while
+        // browsers connect through the HTTPS reverse proxy.
+        'client_host' => env('AMCS_REVERB_CLIENT_HOST', env('REVERB_HOST', 'localhost')),
+        'client_port' => (int) env('AMCS_REVERB_CLIENT_PORT', env('REVERB_PORT', 8080)),
+        'client_scheme' => env('AMCS_REVERB_CLIENT_SCHEME', env('REVERB_SCHEME', 'http')),
     ],
 
     /*

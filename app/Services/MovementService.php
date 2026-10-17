@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\AircraftCategory;
 use App\Enums\MovementState;
+use App\Events\StandBoardUpdated;
 use App\Exceptions\OperationException;
 use App\Models\AircraftType;
 use App\Models\Airline;
@@ -36,7 +37,7 @@ class MovementService
      */
     public function create(array $data, User $actor): array
     {
-        return DB::transaction(function () use ($data, $actor) {
+        $result = DB::transaction(function () use ($data, $actor) {
             $stand = $this->lockStand($data['parking_stand_id'] ?? null);
             $aircraft = $this->resolveAircraft($data, null, $actor);
             $warnings = [];
@@ -92,6 +93,10 @@ class MovementService
 
             return ['movement' => $movement->fresh(['parkingStand', 'airline', 'aircraftType']), 'warnings' => $warnings];
         });
+
+        $this->announce($result['movement'], 'created');
+
+        return $result;
     }
 
     /**
@@ -102,7 +107,7 @@ class MovementService
      */
     public function update(Movement $movement, array $data, User $actor, ?string $reason = null): array
     {
-        return DB::transaction(function () use ($movement, $data, $actor, $reason) {
+        $result = DB::transaction(function () use ($movement, $data, $actor, $reason) {
             $movement = Movement::whereKey($movement->id)->lockForUpdate()->firstOrFail();
             $before = $this->snapshot($movement);
             $warnings = [];
@@ -168,6 +173,10 @@ class MovementService
 
             return ['movement' => $movement->fresh(['parkingStand', 'airline', 'aircraftType']), 'warnings' => $warnings];
         });
+
+        $this->announce($result['movement'], 'updated');
+
+        return $result;
     }
 
     /**
@@ -178,7 +187,7 @@ class MovementService
      */
     public function transition(Movement $movement, MovementState $target, array $data, User $actor): array
     {
-        return DB::transaction(function () use ($movement, $target, $data, $actor) {
+        $result = DB::transaction(function () use ($movement, $target, $data, $actor) {
             $movement = Movement::whereKey($movement->id)->lockForUpdate()->firstOrFail();
             $before = $this->snapshot($movement);
             $current = $movement->state;
@@ -277,6 +286,10 @@ class MovementService
 
             return ['movement' => $movement->fresh(['parkingStand', 'airline', 'aircraftType']), 'warnings' => $warnings];
         });
+
+        $this->announce($result['movement'], 'transitioned');
+
+        return $result;
     }
 
     /**
@@ -311,7 +324,7 @@ class MovementService
             throw OperationException::make('Alasan reset wajib diisi.', errors: ['reason' => ['Alasan reset wajib diisi.']]);
         }
 
-        return DB::transaction(function () use ($actor, $reason) {
+        $affected = DB::transaction(function () use ($actor, $reason) {
             $movements = Movement::query()
                 ->whereIn('state', MovementState::activeValues())
                 ->lockForUpdate()
@@ -364,6 +377,10 @@ class MovementService
 
             return $movements->count();
         });
+
+        $this->announce(null, 'reset');
+
+        return $affected;
     }
 
     /**
@@ -385,11 +402,31 @@ class MovementService
                 actor: $actor,
             );
         });
+
+        $this->announce($movement, 'archived');
     }
 
     /* ------------------------------------------------------------------ */
     /* Helpers */
     /* ------------------------------------------------------------------ */
+
+    /**
+     * Notify dashboards that the live board changed. Broadcasting failures
+     * must never break an operational write; the frontend keeps a polling
+     * fallback in any case.
+     */
+    protected function announce(?Movement $movement = null, string $action = 'updated'): void
+    {
+        if (! config('amcs.realtime.broadcast')) {
+            return;
+        }
+
+        rescue(
+            fn () => event(new StandBoardUpdated($movement?->parking_stand_id, $movement?->id, $action)),
+            null,
+            false,
+        );
+    }
 
     protected function lockStand(int|string|null $standId): ?ParkingStand
     {

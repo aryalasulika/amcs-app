@@ -4,14 +4,11 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Web\AdminPageController;
 use App\Http\Controllers\Web\AtcMonitorController;
 use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\HomeController;
 use App\Http\Controllers\Web\ReportPageController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return auth()->check()
-        ? redirect()->route('dashboard')
-        : redirect()->route('login');
-});
+Route::get('/', [HomeController::class, 'index']);
 
 Route::middleware('guest')->group(function () {
     Route::get('login', [LoginController::class, 'create'])->name('login');

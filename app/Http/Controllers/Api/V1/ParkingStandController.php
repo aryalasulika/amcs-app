@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Events\StandBoardUpdated;
 use App\Exceptions\OperationException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ParkingStandRequest;
@@ -39,6 +40,7 @@ class ParkingStandController extends Controller
         $stand->aircraftTypes()->sync($typeIds);
 
         $this->audit->record('parking_stand.created', $stand, [], $this->snapshot($stand), null, $request->user());
+        $this->announceBoard($stand->id, 'stand.created');
 
         return (new ParkingStandResource($stand->load('aircraftTypes')))->response()->setStatusCode(201);
     }
@@ -63,6 +65,7 @@ class ParkingStandController extends Controller
         }
 
         $this->audit->record('parking_stand.updated', $parkingStand, $before, $this->snapshot($parkingStand->fresh('aircraftTypes')), null, $request->user());
+        $this->announceBoard($parkingStand->id, 'stand.updated');
 
         return new ParkingStandResource($parkingStand->load('aircraftTypes'));
     }
@@ -79,8 +82,18 @@ class ParkingStandController extends Controller
         $parkingStand->aircraftTypes()->detach();
         $parkingStand->delete();
         $this->audit->record('parking_stand.deleted', null, $before, [], null, $request->user());
+        $this->announceBoard(null, 'stand.deleted');
 
         return response()->json(['message' => 'Parking stand dihapus.']);
+    }
+
+    protected function announceBoard(?int $standId, string $action): void
+    {
+        if (! config('amcs.realtime.broadcast')) {
+            return;
+        }
+
+        rescue(fn () => event(new StandBoardUpdated($standId, null, $action)), null, false);
     }
 
     /**

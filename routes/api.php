@@ -47,6 +47,8 @@ Route::prefix('v1')->group(function () {
         Route::match(['put', 'patch'], 'movements/{movement}', [MovementController::class, 'update']);
         Route::delete('movements/{movement}', [MovementController::class, 'destroy']);
         Route::patch('movements/{movement}/state', [MovementController::class, 'transition']);
+        Route::match(['put', 'patch'], 'movements/{movement}/history', [MovementController::class, 'adminUpdate']);
+        Route::delete('movements/{movement}/history', [MovementController::class, 'adminDestroy']);
         Route::post('movements/{movement}/block-on', [MovementController::class, 'blockOn']);
         Route::post('movements/{movement}/block-off', [MovementController::class, 'blockOff']);
         Route::post('movements/{movement}/delay', [MovementController::class, 'delay']);

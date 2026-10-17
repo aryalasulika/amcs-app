@@ -20,6 +20,7 @@ class RoleAndPermissionSeeder extends Seeder
         'movements.update',
         'movements.delete',
         'movements.override',
+        'movements.history.manage',
         'reports.view',
         'reports.export',
         'history.view',
