@@ -13,7 +13,7 @@ AMCS digunakan oleh:
 Aplikasi ini merupakan implementasi ulang dari versi HTML/JavaScript + Firebase
 menjadi **Laravel + MySQL**, sesuai dokumen [`prd.md`](prd.md).
 
-> **Status:** MVP operasional. 51 automated tests lulus (179 assertions).
+> **Status:** MVP operasional. 52 automated tests lulus (184 assertions).
 > Panduan deploy produksi: [`DEPLOYMENT_UBUNTU_24.md`](DEPLOYMENT_UBUNTU_24.md).
 
 ---
@@ -44,6 +44,9 @@ menjadi **Laravel + MySQL**, sesuai dokumen [`prd.md`](prd.md).
 ## 1. Ringkasan Fitur
 
 - **Autentikasi & sesi** — login/logout web dan token API (Sanctum); akun nonaktif ditolak.
+- **Halaman login responsif** — tampilan split-screen di desktop, form ringkas di
+  mobile, toggle tampilkan/sembunyikan kata sandi, status loading, dan tanpa
+  petunjuk akun demo pada form.
 - **RBAC** — role dan permission pada route, controller, Form Request, dan Policy.
 - **Dashboard AMC** — papan parking stand (5 stand pada data awal), form
   input/koreksi pergerakan, aksi cepat, rekomendasi stand, statistik harian,
@@ -685,7 +688,7 @@ dan `config/reverb.php`.
 php artisan test
 ```
 
-Cakupan saat ini: **51 tes, 179 assertions**.
+Cakupan saat ini: **52 tes, 184 assertions**.
 
 Area yang diuji:
 

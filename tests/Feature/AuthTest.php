@@ -6,6 +6,17 @@ use Tests\AmcsTestCase;
 
 class AuthTest extends AmcsTestCase
 {
+    public function test_login_page_has_clear_placeholders_without_demo_credentials(): void
+    {
+        $response = $this->get('/login');
+
+        $response->assertOk()
+            ->assertSee('Masukkan email Anda')
+            ->assertSee('Masukkan kata sandi Anda')
+            ->assertDontSee('Akun contoh hasil seeder')
+            ->assertDontSee('Amcs#2026');
+    }
+
     public function test_user_can_login_and_receive_token(): void
     {
         $response = $this->postJson('/api/v1/auth/login', [
